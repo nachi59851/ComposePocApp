@@ -7,10 +7,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composepocapp.domain.model.Recipe
+import com.example.composepocapp.intractors.recipe.GetRecipe
 import com.example.composepocapp.repository.RecipeRepository
 import com.example.composepocapp.utils.TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
@@ -20,6 +23,7 @@ const val STATE_KEY_RECIPE = "recipe.state.recipe.key"
 @HiltViewModel
 class RecipeViewModel
     @Inject constructor(
+        private val getRecipe: GetRecipe,
         private val repository: RecipeRepository,
         @Named("auth_token") private val token: String,
         private val state: SavedStateHandle
@@ -53,8 +57,27 @@ class RecipeViewModel
         }
     }
 
-    private suspend fun getRecipe(recipeId: Int){
-        loading.value = true
+    private  fun getRecipe(recipeId: Int){
+
+        getRecipe.execute(
+            recipeId,
+            token,
+            true
+        ).onEach { dataState ->
+            loading.value = dataState.loading
+
+            dataState.data?.let { data ->
+                recipe.value = data
+                state.set(STATE_KEY_RECIPE, data.id)
+            }
+
+            dataState.error?.let { error ->
+                Log.e(TAG, "getRecipe: $error")
+            }
+        }.launchIn(viewModelScope)
+
+
+        /*loading.value = true
 
         delay(1000)
 
@@ -67,6 +90,6 @@ class RecipeViewModel
 
         state.set(STATE_KEY_RECIPE,recipe.id)
 
-        loading.value = false
+        loading.value = false*/
     }
 }

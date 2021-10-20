@@ -7,10 +7,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composepocapp.domain.model.Recipe
+import com.example.composepocapp.intractors.recipe_list.RestoreRecipes
+import com.example.composepocapp.intractors.recipe_list.SearchRecipes
 import com.example.composepocapp.repository.RecipeRepository
 import com.example.composepocapp.utils.TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Named
@@ -25,6 +29,8 @@ const val STATE_KEY_SELECTED_CATEGORY = "recipe.state.query.selected_category"
 @HiltViewModel
 class RecipeListViewModel
 @Inject constructor(
+    private val searchRecipes: SearchRecipes,
+    private val restoreRecipes: RestoreRecipes,
     private val repository: RecipeRepository,
     @Named("auth_token") private val token: String,
     private val savedStateHandle: SavedStateHandle // just like shared preferences
@@ -98,9 +104,24 @@ class RecipeListViewModel
     }
 
     //calling from coroutine scope
-    private suspend fun restoreState(){
+    private fun restoreState(){
 
-        loading.value = true
+        restoreRecipes.execute(
+            page = page.value,
+            query = query.value
+        ).onEach { dataState ->
+            loading.value = dataState.loading
+
+            dataState.data?.let { list ->
+                recipes.value = list
+            }
+
+            dataState.error?.let { error ->
+                Log.e(TAG, "restoreState: $error")
+            }
+        }.launchIn(viewModelScope)
+
+       /* loading.value = true
 
         val results: MutableList<Recipe> = mutableListOf()
 
@@ -112,13 +133,37 @@ class RecipeListViewModel
                 recipes.value = results
                 loading.value = false
             }
-        }
+        }*/
     }
 
     //calling from coroutine scope
-    private suspend fun nextPage(){
+    private fun nextPage(){
 
-        if((recipeListScrollPosition + 1) >= (page.value * PAGE_SIZE)){
+        if ((recipeListScrollPosition + 1) >= (page.value * PAGE_SIZE)) {
+
+            incrementPage()
+            Log.d(TAG, "nextPage: triggered: ${page.value}")
+
+            if (page.value > 1) {
+                searchRecipes.execute(
+                    token = token,
+                    page = page.value,
+                    query = query.value
+                ).onEach { dataState ->
+                    loading.value = dataState.loading
+
+                    dataState.data?.let { list ->
+                        appendRecipes(list)
+                    }
+
+                    dataState.error?.let { error ->
+                        Log.e(TAG, "nextPage: $error")
+                    }
+                }.launchIn(viewModelScope)
+            }
+        }
+
+        /*if((recipeListScrollPosition + 1) >= (page.value * PAGE_SIZE)){
 
             loading.value = true
             incrementPage()
@@ -134,13 +179,35 @@ class RecipeListViewModel
                 appendRecipes(result)
             }
             loading.value = false
-        }
+        }*/
     }
 
     //calling from coroutine scope
-    private suspend fun newSearch(){
+    private fun newSearch(){
 
-        loading.value = true
+        Log.d(TAG, "newSearch: query: ${query.value}, page: ${page.value}")
+
+        resetSearchState()
+
+        searchRecipes.execute(
+            token = token,
+            page = page.value,
+            query = query.value
+        ).onEach { dataState ->
+
+            loading.value = dataState.loading
+
+            dataState.data?.let { list ->
+                recipes.value = list
+            }
+
+            dataState.error?.let { error ->
+                Log.e(TAG, "newSearch: $error")
+            }
+        }.launchIn(viewModelScope) // clear when viewModel gets destroyed. So this job will get die
+
+
+        /*loading.value = true
 
         resetSearchState()
 
@@ -151,7 +218,7 @@ class RecipeListViewModel
 
         this.recipes.value = result
 
-        loading.value = false
+        loading.value = false*/
     }
 
     private fun appendRecipes(tempRecipes : List<Recipe>){

@@ -66,7 +66,7 @@ fun RecipeView(
                         style = MaterialTheme.typography.h5
                     )
                 }
-                val updated = recipe.dateUpdated
+                val updated = recipe.newDateUpdate
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()

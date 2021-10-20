@@ -3,8 +3,10 @@ buildscript {
     ext.kotlin_version = "1.5.21"
     ext.compose_version = '1.0.2'
     repositories {
+        gradlePluginPortal()
         google()
         jcenter()
+        mavenCentral()
     }
     dependencies {
         def gradle = '7.0.2'
@@ -14,6 +16,8 @@ buildscript {
 
         def hilt = "2.38.1"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt"
+
+     //   classpath "de.mannodermaus.gradle.plugins:android-junit5:${Versions.junit5}"
     }
 }
 

@@ -1,8 +1,10 @@
 package com.example.composepocapp.network.model
 
 import android.util.Log
+import com.example.composepocapp.domain.model.NewRecipe
 import com.example.composepocapp.domain.model.Recipe
 import com.example.composepocapp.domain.util.DomainMapper
+import com.example.composepocapp.utils.DateUtils
 import com.example.composepocapp.utils.TAG
 
 class RecipeDtoMapper: DomainMapper<RecipeDto, Recipe> {
@@ -18,8 +20,8 @@ class RecipeDtoMapper: DomainMapper<RecipeDto, Recipe> {
             publisher = model.publisher,
             sourceUrl = model.sourceUrl,
             ingredients = model.ingredients,
-            dateAdded = model.dateAdded,
-            dateUpdated = model.dateUpdated,
+            newDateAdded = DateUtils.longToDate(model.longDateAdded),
+            newDateUpdate = DateUtils.longToDate(model.longDateUpdated),
         )
     }
 
@@ -33,8 +35,8 @@ class RecipeDtoMapper: DomainMapper<RecipeDto, Recipe> {
             publisher = domainModel.publisher,
             sourceUrl = domainModel.sourceUrl,
             ingredients = domainModel.ingredients,
-            dateAdded = domainModel.dateAdded,
-            dateUpdated = domainModel.dateUpdated,
+            longDateAdded = DateUtils.dateToLong(domainModel.newDateAdded),
+            longDateUpdated = DateUtils.dateToLong(domainModel.newDateUpdate),
         )
     }
 
@@ -47,4 +49,5 @@ class RecipeDtoMapper: DomainMapper<RecipeDto, Recipe> {
     fun fromDomainList(initial : List<Recipe>): List<RecipeDto>{
         return initial.map { mapFromDomainModel(it) }
     }
+
 }

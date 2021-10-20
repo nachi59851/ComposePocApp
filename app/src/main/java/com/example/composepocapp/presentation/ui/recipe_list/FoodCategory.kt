@@ -5,7 +5,6 @@ import com.example.composepocapp.presentation.ui.recipe_list.FoodCategory.*
 enum class FoodCategory(val value: String) {
 
     CHICKEN("Chicken"),
-    //BEEF("Beef"),
     SOUP("Soup"),
     DESSERT("Dessert"),
     VEGETARIAN("Vegetarian"),
