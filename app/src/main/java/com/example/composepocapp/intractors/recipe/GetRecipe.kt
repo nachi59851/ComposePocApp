@@ -25,7 +25,6 @@ class GetRecipe(
         try{
             emit(DataState.loading())
 
-            // just to show loading, db is fast
             delay(1000)
             var recipe = getRecipeFromCache(recipeId = recipeId)
 
